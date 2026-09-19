@@ -24,6 +24,9 @@
             background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M 20 50 Q 20 30 40 30 Q 50 10 70 30 Q 90 30 90 50 Z" fill="white" opacity="0.4"/></svg>');
             background-size: 200px;
         }
+
+        /* Styles for CSS shapes when SVGs aren't used */
+        .shape-container { transition: all 0.5s ease; }
     </style>
 </head>
 <body class="bg-gradient-to-b from-sky-300 to-sky-100 flex font-sans min-h-screen cloud-bg selection:bg-yellow-200">
@@ -40,7 +43,6 @@
                     <h1 class="text-3xl font-extrabold mb-1 drop-shadow-md tracking-tight" id="greeting-text">Hello!</h1>
                     <p class="text-yellow-50 font-medium text-sm">Listen carefully, then speak!</p>
                 </div>
-                <!-- Thesis Feature: Displaying the Adaptive Level -->
                 <div class="bg-white/20 px-3 py-2 rounded-xl border border-white/40 shadow-inner text-right">
                     <span class="block text-[10px] uppercase tracking-wider font-bold text-yellow-100 mb-0.5">Difficulty</span>
                     <span class="block text-2xl font-black" id="difficulty-badge">Lvl 1</span>
@@ -48,15 +50,18 @@
             </div>
             
             <div class="p-8 md:p-10 flex flex-col items-center">
-                <div class="relative mb-8 floating">
-                    <div id="avatar-display" class="relative w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center text-6xl shadow-xl border-4 border-yellow-100 z-10">
+                <div class="relative mb-6 floating">
+                    <div id="avatar-display" class="relative w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center text-5xl shadow-xl border-4 border-yellow-100 z-10">
                         ⏳
                     </div>
                 </div>
                 
-                <div class="bg-sky-50 rounded-2xl p-6 w-full mb-8 border-2 border-sky-100 shadow-inner min-h-[100px] flex flex-col items-center justify-center">
+                <div class="bg-sky-50 rounded-2xl p-6 w-full mb-8 border-2 border-sky-100 shadow-inner min-h-[140px] flex flex-col items-center justify-center relative">
+                    
+                    <!-- NEW VISUAL CONTAINER FOR SHAPES/COLORS -->
+                    <div id="visual-display" class="hidden shape-container w-32 h-32 mb-4 rounded-2xl flex items-center justify-center shadow-md border-4 border-white"></div>
+                    
                     <h2 class="text-2xl md:text-3xl font-extrabold text-sky-900 leading-tight mb-2" id="prompt-text">Waking up...</h2>
-                    <!-- Added a helper text to show what the system is listening for -->
                     <p class="text-sm font-bold text-sky-600 bg-sky-100 px-3 py-1 rounded-full hidden" id="target-hint">Target: <span id="target-word"></span></p>
                 </div>
                 
@@ -95,14 +100,30 @@
             }
         }
 
+        // SVG Dictionary for rendering shapes
+        function getShapeSVG(shapeName) {
+            const shapes = {
+                circle: '<svg viewBox="0 0 100 100" class="w-full h-full p-2"><circle cx="50" cy="50" r="45" fill="#3b82f6"/></svg>',
+                square: '<svg viewBox="0 0 100 100" class="w-full h-full p-2"><rect x="10" y="10" width="80" height="80" rx="10" fill="#ef4444"/></svg>',
+                triangle: '<svg viewBox="0 0 100 100" class="w-full h-full p-2"><polygon points="50,10 90,90 10,90" fill="#22c55e"/></svg>',
+                star: '<svg viewBox="0 0 100 100" class="w-full h-full p-2"><polygon points="50,5 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35" fill="#eab308"/></svg>',
+                heart: '<svg viewBox="0 0 100 100" class="w-full h-full p-2"><path d="M50,90 C50,90 10,60 10,35 C10,15 35,15 50,35 C65,15 90,15 90,35 C90,60 50,90 50,90 Z" fill="#ec4899"/></svg>'
+            };
+            return shapes[shapeName] || '';
+        }
+
         async function loadQuestion() {
             const promptEl = document.getElementById('prompt-text');
             const micBtn = document.getElementById('mic-btn');
             const diffBadge = document.getElementById('difficulty-badge');
             const targetHint = document.getElementById('target-hint');
+            const visualDisplay = document.getElementById('visual-display');
             
             promptEl.innerText = "Thinking...";
             targetHint.classList.add('hidden');
+            visualDisplay.classList.add('hidden');
+            visualDisplay.innerHTML = '';
+            visualDisplay.style.backgroundColor = 'transparent';
             micBtn.disabled = true; 
             
             const question = await getNextQuestion(verifiedChildId);
@@ -116,6 +137,15 @@
                 // Show hint for testing purposes
                 document.getElementById('target-word').innerText = expectedAnswer;
                 targetHint.classList.remove('hidden');
+
+                // DYNAMIC VISUAL RENDERING
+                if (question.question_type === 'color' && question.visual_data) {
+                    visualDisplay.classList.remove('hidden');
+                    visualDisplay.style.backgroundColor = question.visual_data;
+                } else if (question.question_type === 'shape' && question.visual_data) {
+                    visualDisplay.classList.remove('hidden');
+                    visualDisplay.innerHTML = getShapeSVG(question.visual_data);
+                }
                 
                 micBtn.disabled = false; 
             } else {
@@ -177,7 +207,7 @@
 
             recognition.onerror = (event) => {
                 if(event.error === 'no-speech') {
-                    evaluateAnswer(""); // Send blank to evaluation to handle it gracefully
+                    evaluateAnswer(""); 
                 } else {
                     console.error("Speech error:", event.error);
                     micHint.innerText = `MIC ERROR: ${event.error}`;
@@ -188,7 +218,6 @@
             recognition.onend = () => {
                 if(!isEvaluating) resetMicUI(); 
             };
-
         } else {
             alert("Speech Recognition is not supported. Please use Chrome/Safari.");
         }
@@ -204,7 +233,6 @@
         function evaluateAnswer(rawTranscript) {
             isEvaluating = true;
             
-            // Clean the transcript: remove punctuation, lowercase it
             let childSpoke = rawTranscript.replace(/[.,!?]/g, '').toLowerCase().trim();
             
             if (childSpoke === "") {
@@ -222,23 +250,18 @@
             let bestScore = 0;
 
             for (let ans of possibleAnswers) {
-                // 1. Exact Match Check
                 if (childSpoke === ans) {
                     bestScore = 1.0;
                     break;
                 }
 
-                // 2. Standard Levenshtein Check
                 let score = calculateSimilarity(childSpoke, ans);
 
-                // 3. THESIS FEATURE: Phonetic Over-Correction Bypass
-                // If the target is a short sound (like "moo") and the AI autocorrects to a longer word (like "more")
+                // THESIS FEATURE: Phonetic Over-Correction Bypass
                 if (ans.length <= 4) {
-                    // If the heard word STARTS with the target word (e.g. "moo" -> "moon")
                     if (childSpoke.startsWith(ans)) {
                         score = Math.max(score, 0.95);
                     }
-                    // If the heard word starts with the first 2 letters (e.g. "moo" -> "more")
                     else if (ans.length >= 2 && childSpoke.startsWith(ans.substring(0, 2))) {
                         score = Math.max(score, 0.85); 
                     }
@@ -247,7 +270,6 @@
                 if (score > bestScore) bestScore = score;
             }
 
-            // Lowered threshold to 70% to accommodate the over-correction bypass
             if (bestScore >= 0.70) {
                 isCorrect = true;
                 micBtn.className = "bg-green-400 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg border-4 border-white transform scale-110 transition-all";
@@ -264,12 +286,11 @@
             logInteractionAndNext(isCorrect, childSpoke);
         }
 
-        // Helper function to log and load next
         function logInteractionAndNext(isCorrect, transcript) {
             logInteraction(verifiedChildId, currentQuestionId, isCorrect, transcript).then(() => {
                 setTimeout(() => {
                     resetMicUI();
-                    loadQuestion(); // Fetch next question (Will adapt!)
+                    loadQuestion(); 
                 }, 2500);
             }).catch(() => {
                 alert("Failed to save progress.");

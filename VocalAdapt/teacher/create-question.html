@@ -18,7 +18,6 @@
         }
     </script>
     <style>
-        /* Smoother scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 10px; }
@@ -29,20 +28,15 @@
 
     <div id="sidebar-container"></div>
 
-    <!-- Main Content Area - Centered using flex properties -->
     <main class="flex-1 p-6 md:p-10 overflow-y-auto flex flex-col items-center justify-start">
-        
-        <!-- Inner Wrapper to control max-width and center horizontally -->
         <div class="w-full max-w-2xl mt-4 md:mt-10">
-            
+
             <header class="mb-8 text-center md:text-left">
                 <h1 class="text-3xl font-bold text-zinc-900 tracking-tight">Question Bank</h1>
-                <p class="text-zinc-500 font-medium mt-1.5">Add new prompts and expected answers to the curriculum.</p>
+                <p class="text-zinc-500 font-medium mt-1.5">Add new prompts, visuals, and expected answers.</p>
             </header>
 
             <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8 md:p-10 relative overflow-hidden">
-                
-                <!-- Subtle decorative background gradient -->
                 <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-50 pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
 
                 <div class="flex items-center gap-3 mb-8 border-b border-zinc-100 pb-4 relative z-10">
@@ -53,41 +47,86 @@
                     </div>
                     <h2 class="text-xl font-bold text-zinc-800">Create New Question</h2>
                 </div>
-                
+
                 <form id="create-question-form" class="space-y-6 relative z-10">
-                    
+
                     <!-- Skill Selection -->
                     <div>
                         <label class="block text-sm font-semibold text-zinc-700 mb-2">Target Skill (Domain)</label>
                         <select id="skill-select" required class="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-zinc-800 appearance-none cursor-pointer">
                             <option value="" disabled selected>Loading skills from database...</option>
-                            <!-- Options populated dynamically -->
                         </select>
-                        <p class="text-[11px] font-medium text-zinc-500 mt-2">Which cognitive skill does this question test?</p>
+                    </div>
+
+                    <!-- Question Type Selection -->
+                    <div>
+                        <label class="block text-sm font-semibold text-zinc-700 mb-2">Question Type</label>
+                        <select id="question-type" class="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-zinc-800 appearance-none cursor-pointer">
+                            <option value="text">Standard (Speech / Text Only)</option>
+                            <option value="color">Visual: Color Identification</option>
+                            <option value="shape">Visual: Shape Identification</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Visual Configuration -->
+                    <div id="visual-config-container" class="hidden p-4 rounded-xl border border-indigo-100 bg-indigo-50/30 space-y-4">
+                        <h3 class="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10 2.5a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0v-1.5zM10 16a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0V16zM4.25 10a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5zM17.25 10a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5zM12.03 4.47a.75.75 0 00-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM7.97 15.53a.75.75 0 00-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM7.97 4.47a.75.75 0 00-1.06 1.06l-1.06-1.06a.75.75 0 001.06-1.06l1.06 1.06zM12.03 15.53a.75.75 0 00-1.06 1.06l-1.06-1.06a.75.75 0 001.06-1.06l1.06 1.06z" /></svg>
+                            Visual Configuration
+                        </h3>
+                        
+                        <!-- Basic Color Dropdown -->
+                        <div id="color-picker-wrapper" class="hidden">
+                            <label class="block text-sm font-medium text-zinc-700 mb-1">Select Basic Color to Display</label>
+                            <select id="color-value" class="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
+                                <option value="#ef4444">Red</option>
+                                <option value="#3b82f6">Blue</option>
+                                <option value="#22c55e">Green</option>
+                                <option value="#eab308">Yellow</option>
+                                <option value="#f97316">Orange</option>
+                                <option value="#a855f7">Purple</option>
+                                <option value="#ec4899">Pink</option>
+                                <option value="#000000">Black</option>
+                                <option value="#ffffff">White</option>
+                                <option value="#8b5cf6">Violet</option>
+                                <option value="#78350f">Brown</option>
+                            </select>
+                        </div>
+
+                        <!-- Shape Picker -->
+                        <div id="shape-picker-wrapper" class="hidden">
+                            <label class="block text-sm font-medium text-zinc-700 mb-1">Select Shape to Display</label>
+                            <select id="shape-value" class="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm appearance-none cursor-pointer">
+                                <option value="circle">Circle</option>
+                                <option value="square">Square</option>
+                                <option value="triangle">Triangle</option>
+                                <option value="star">Star</option>
+                                <option value="heart">Heart</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Prompt Text -->
                     <div>
                         <label class="block text-sm font-semibold text-zinc-700 mb-2">Prompt Text (What the TTS says)</label>
-                        <input type="text" id="prompt-text" required placeholder="e.g., What sound does the letter C make?" 
+                        <input type="text" id="prompt-text" required placeholder="e.g., What color is this?" 
                             class="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm placeholder:text-zinc-400">
                     </div>
 
-                    <!-- Expected Answer with AI Button -->
+                    <!-- Expected Answer -->
                     <div>
                         <label class="block text-sm font-semibold text-zinc-700 mb-2">Expected Answer (Target)</label>
                         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                            <input type="text" id="expected-answer" required placeholder="e.g., kuh" 
+                            <input type="text" id="expected-answer" required placeholder="e.g., red, circle" 
                                 class="flex-1 px-4 py-3 bg-zinc-50/50 border border-zinc-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm placeholder:text-zinc-400">
-                            
+
                             <button type="button" id="ai-generate-btn" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-5 py-3 rounded-xl font-semibold border border-indigo-100 transition-all flex items-center justify-center gap-2 text-sm shadow-sm whitespace-nowrap">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                                 </svg>
                                 Auto-Generate
                             </button>
                         </div>
-                        <p class="text-[11px] font-medium text-zinc-500 mt-2">What exact word or sound should the Layer 1 NLU listen for?</p>
                     </div>
 
                     <!-- Difficulty Level -->
@@ -106,23 +145,19 @@
                             Save Question to Database
                         </button>
                     </div>
-                    
-                    <!-- Status Message -->
+
                     <div id="status-message" class="hidden"></div>
                 </form>
             </div>
         </div>
     </main>
 
-    <!-- Load the Sidebar -->
     <script src="../sidebar/loader.js"></script>
 
-    <!-- Form Logic -->
     <script type="module">
         import { getSkills, addQuestion, logoutUser } from '../api/api.js';
         import { supabase } from '../api/supabase.js';
 
-        // --- SECURITY GUARD ---
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) window.location.href = '../index.html'; 
 
@@ -137,30 +172,44 @@
                 const email = user.email;
                 let name = user.user_metadata?.full_name || email.split('@')[0];
                 name = name.charAt(0).toUpperCase() + name.slice(1);
-
                 nameEl.textContent = name;
                 emailEl.textContent = email;
-                
                 if (avatarEl) {
                     avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&rounded=true`;
                 }
             }
         }, 500);
 
-        // Logout Logic
         document.addEventListener('click', async (e) => {
             const logoutBtn = e.target.closest('#teacher-logout-btn');
             if (logoutBtn) {
                 e.preventDefault();
-                try {
-                    logoutBtn.innerText = "Signing out...";
-                    await logoutUser();
-                    window.location.href = '../index.html';
-                } catch(error) {
-                    console.error("Logout failed", error);
-                    alert("Failed to log out. Please try again.");
-                    logoutBtn.innerText = "Sign Out";
-                }
+                await logoutUser();
+                window.location.href = '../index.html';
+            }
+        });
+
+        // FIXED UI Logic for Visual Questions Toggle
+        const typeSelect = document.getElementById('question-type');
+        const visualConfigContainer = document.getElementById('visual-config-container');
+        const colorWrapper = document.getElementById('color-picker-wrapper');
+        const shapeWrapper = document.getElementById('shape-picker-wrapper');
+
+        typeSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            
+            // First, hide everything to ensure a clean slate
+            visualConfigContainer.classList.add('hidden');
+            colorWrapper.classList.add('hidden');
+            shapeWrapper.classList.add('hidden');
+
+            // Then, only show exactly what is needed
+            if (val === 'color') {
+                visualConfigContainer.classList.remove('hidden');
+                colorWrapper.classList.remove('hidden');
+            } else if (val === 'shape') {
+                visualConfigContainer.classList.remove('hidden');
+                shapeWrapper.classList.remove('hidden');
             }
         });
 
@@ -175,55 +224,38 @@
             const promptText = document.getElementById('prompt-text').value;
             if (!promptText) {
                 statusMsg.textContent = "Please type a Prompt Text first!";
-                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-amber-50 text-amber-800 border border-amber-100 block mt-6";
+                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-amber-50 text-amber-800 border block mt-6";
                 return;
             }
 
-            aiBtn.innerHTML = `
-                <svg class="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Thinking...
-            `;
+            aiBtn.innerHTML = `Thinking...`;
             aiBtn.disabled = true;
 
             try {
                 const aiPrompt = `Act as an expert in early childhood education speech systems. Read this prompt spoken to a preschooler: "${promptText}". What is the exact, single phonetic sound or word the system should listen for as the correct answer? (e.g., If prompt is "Sound for letter C", return "kuh". If prompt is "Color of the sky", return "blue"). Return ONLY the lowercase target word, nothing else.`;
-                
+
                 const payload = { contents: [{ parts: [{ text: aiPrompt }] }] };
-                const apiKey = "AQ.Ab8RN6IbKHLR1ONeUMxOOUOODg8GN_UxK9fFShU4uUI7Y7Wzgw"; 
+                const apiKey = "AQ.Ab8RN6I0346GaWKjV9cc7cXixPYTnOBUJWP9OPu2_8kRhHv17w"; 
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
-                
+
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
-                const result = await response.json();
-                
-                if (result.error) throw new Error(result.error.message);
 
+                const result = await response.json();
                 const generatedAnswer = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-                
+
                 if (generatedAnswer) {
                     document.getElementById('expected-answer').value = generatedAnswer;
                     statusMsg.classList.add('hidden');
-                } else {
-                     throw new Error("AI returned an empty response.");
                 }
             } catch (error) {
-                console.error("AI Generation Error:", error);
                 statusMsg.textContent = "API Error: " + error.message;
-                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-rose-50 text-rose-800 border border-rose-100 block mt-6";
+                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-rose-50 text-rose-800 block mt-6";
             } finally {
-                aiBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                    </svg>
-                    Auto-Generate
-                `;
+                aiBtn.innerHTML = `Auto-Generate`;
                 aiBtn.disabled = false;
             }
         });
@@ -231,7 +263,6 @@
         async function loadSkills() {
             const skills = await getSkills();
             skillSelect.innerHTML = '<option value="" disabled selected>Select a target skill...</option>';
-            
             skills.forEach(skill => {
                 const option = document.createElement('option');
                 option.value = skill.id;
@@ -242,48 +273,43 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault(); 
-            
+
             const skillId = skillSelect.value;
+            const qType = typeSelect.value;
             const prompt = document.getElementById('prompt-text').value;
             const expected = document.getElementById('expected-answer').value;
             const difficulty = document.getElementById('difficulty').value;
 
+            // Determine what visual data to save
+            let visualData = null;
+            if (qType === 'color') {
+                visualData = document.getElementById('color-value').value;
+            } else if (qType === 'shape') {
+                visualData = document.getElementById('shape-value').value;
+            }
+
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-            `;
+            submitBtn.innerHTML = `Saving...`;
             statusMsg.classList.add('hidden');
 
             try {
-                await addQuestion(skillId, prompt, expected, difficulty);
-                
-                statusMsg.innerHTML = `
-                    <div class="flex justify-center items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-                        </svg>
-                        Question successfully added!
-                    </div>
-                `;
-                statusMsg.className = "text-center p-4 rounded-xl font-bold text-sm bg-emerald-50 text-emerald-700 border border-emerald-100 block mt-6";
-                
+                await addQuestion(skillId, prompt, expected, difficulty, qType, visualData);
+                statusMsg.innerHTML = `Question successfully added!`;
+                statusMsg.className = "text-center p-4 rounded-xl font-bold text-sm bg-emerald-50 text-emerald-700 block mt-6";
                 form.reset();
+                
+                // Reset UI to default hidden state
+                visualConfigContainer.classList.add('hidden');
+                colorWrapper.classList.add('hidden');
+                shapeWrapper.classList.add('hidden');
+                
             } catch (error) {
-                statusMsg.textContent = "Error saving question. Check console.";
-                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-rose-50 text-rose-800 border border-rose-100 block mt-6";
+                statusMsg.textContent = "Error saving question. Did you add the new columns to Supabase? Check console.";
+                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-rose-50 text-rose-800 block mt-6";
                 console.error(error);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                    </svg>
-                    Save Question to Database
-                `;
+                submitBtn.innerHTML = `Save Question to Database`;
             }
         });
 
