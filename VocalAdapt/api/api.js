@@ -6,7 +6,6 @@ import { supabase } from './supabase.js';
 
 // 1. Fetch live Skill Mastery from child_skill_states
 export async function getStudentMasteryData() {
-    // Fetch students, joined with their skill states and the skill names
     const { data, error } = await supabase
         .from('child_profiles')
         .select(`
@@ -24,7 +23,6 @@ export async function getStudentMasteryData() {
         return [];
     }
 
-    // Transform for the dashboard table
     const formattedStudents = data.map(student => {
         let totalInteractions = 0;
         let cumulativeMastery = 0;
@@ -36,13 +34,11 @@ export async function getStudentMasteryData() {
             cumulativeMastery += state.p_mastery;
             skillCount++;
             
-            // Find the skill they are struggling with most
             if (state.p_mastery < lowestSkill.p_mastery) {
                 lowestSkill = { name: state.skills?.name || "Unknown", p_mastery: state.p_mastery };
             }
         });
 
-        // Calculate an overall aggregate mastery percentage across all skills
         const avgMastery = skillCount > 0 ? (cumulativeMastery / skillCount) : 0;
 
         return {
@@ -55,13 +51,11 @@ export async function getStudentMasteryData() {
         };
     });
 
-    // Sort by lowest mastery first to highlight at-risk students
     return formattedStudents.sort((a, b) => a.avg_mastery - b.avg_mastery);
 }
 
 // 2. Fetch Question level analytics (Struggle Areas & Response Time)
 export async function getQuestionAnalytics() {
-    // Using the aggregated question_analytics table from schema
     const { data, error } = await supabase
         .from('question_analytics')
         .select(`
@@ -72,7 +66,7 @@ export async function getQuestionAnalytics() {
             avg_response_time_ms,
             questions ( prompt_text, expected_answer, difficulty_level, skills(name) )
         `)
-        .order('success_rate', { ascending: true }); // Lowest success first
+        .order('success_rate', { ascending: true });
 
     if (error) {
         console.error("Error fetching question analytics:", error);
@@ -115,7 +109,6 @@ export async function getQuestionAnalytics() {
 // ==========================================
 
 export async function logInteraction(childId, questionId, isCorrect, actualTranscript, responseTimeMs) {
-    
     const { data: qData } = await supabase
         .from('questions')
         .select('skill_id')
@@ -124,7 +117,6 @@ export async function logInteraction(childId, questionId, isCorrect, actualTrans
 
     const skillId = qData ? qData.skill_id : null;
 
-    // Log the raw interaction including response_time_ms
     const { data, error } = await supabase
         .from('interactions')
         .insert([
@@ -144,8 +136,6 @@ export async function logInteraction(childId, questionId, isCorrect, actualTrans
         throw error;
     }
     
-    // Note: In a true production environment, a database trigger or edge function
-    // should immediately recalculate p_mastery in child_skill_states using BKT formulas.
     return data;
 }
 
@@ -155,7 +145,7 @@ export async function getNextQuestion(childId) {
         let targetDifficulty = 1; 
         let answeredQuestionIds = [];
 
-        // 1. Fetch ALL past interactions for this child to avoid repeating
+        // 1. Fetch ALL past interactions
         if (childId) {
             const { data: pastInteractions } = await supabase
                 .from('interactions')
@@ -167,19 +157,18 @@ export async function getNextQuestion(childId) {
                 const lastInteraction = pastInteractions[0];
                 const lastDiff = lastInteraction.questions?.difficulty_level || 1;
 
-                // THESIS CORE: Adaptive Sequencing Rules
                 if (lastInteraction.is_correct) {
-                    targetDifficulty = Math.min(5, lastDiff + 1); // Level Up
+                    targetDifficulty = Math.min(5, lastDiff + 1);
                 } else {
-                    targetDifficulty = Math.max(1, lastDiff - 1); // Level Down
+                    targetDifficulty = Math.max(1, lastDiff - 1);
                 }
                 
-                // Collect ALL previously answered question IDs
                 answeredQuestionIds = pastInteractions.map(p => p.question_id);
             }
         }
 
-        // 2. Fetch questions at the new target difficulty, EXCLUDING answered ones
+        // 2. Fetch questions at new target difficulty, excluding answered ones
+        // Note: select('*') will automatically grab our new `question_type` and `visual_data` columns!
         let query = supabase
             .from('questions')
             .select('*')
@@ -191,7 +180,7 @@ export async function getNextQuestion(childId) {
 
         let { data, error } = await query;
 
-        // 3. If no questions exist at this difficulty, search ALL difficulties for an unseen question
+        // 3. Fallback if no questions exist at this difficulty
         if (!data || data.length === 0) {
              let fallbackQuery = supabase.from('questions').select('*');
              
@@ -204,14 +193,12 @@ export async function getNextQuestion(childId) {
              if (fallbackData && fallbackData.length > 0) {
                  data = fallbackData;
              } else {
-                 // The student has answered literally every question in the DB.
-                 // Return null to signal the frontend to stop the session.
                  console.log("No unseen questions left in the database.");
                  return null; 
              }
         }
 
-        // 4. Pick one random question from the available, unseen pool
+        // 4. Pick random question
         if (data && data.length > 0) {
             const randomIndex = Math.floor(Math.random() * data.length);
             return data[randomIndex];
@@ -228,13 +215,22 @@ export async function getSkills() {
     const { data, error } = await supabase.from('skills').select('*').order('domain');
     return data;
 }
-export async function addQuestion(skillId, promptText, expectedAnswer, difficultyLevel) {
+
+export async function addQuestion(skillId, promptText, expectedAnswer, difficultyLevel, questionType = 'text', visualData = null) {
     const { data, error } = await supabase.from('questions').insert([
-        { skill_id: skillId, prompt_text: promptText, expected_answer: expectedAnswer, difficulty_level: parseInt(difficultyLevel) }
+        { 
+            skill_id: skillId, 
+            prompt_text: promptText, 
+            expected_answer: expectedAnswer, 
+            difficulty_level: parseInt(difficultyLevel),
+            question_type: questionType,
+            visual_data: visualData
+        }
     ]);
     if (error) throw error;
     return data;
 }
+
 export async function addStudent(firstName, dateOfBirth, avatarEmoji) {
     const { data, error } = await supabase.from('child_profiles').insert([
         { first_name: firstName, date_of_birth: dateOfBirth, avatar_url: avatarEmoji }
