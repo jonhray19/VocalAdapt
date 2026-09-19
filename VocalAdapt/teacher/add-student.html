@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student | Teacher Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smoother scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+    </style>
+</head>
+<body class="bg-zinc-50 flex font-sans min-h-screen text-zinc-900 antialiased">
+
+    <!-- The Sidebar will be injected here -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content Area - Centered using flex properties -->
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto flex flex-col items-center justify-start">
+        
+        <!-- Inner Wrapper to control max-width and center horizontally -->
+        <div class="w-full max-w-2xl mt-4 md:mt-10">
+            
+            <header class="mb-8 text-center md:text-left">
+                <h1 class="text-3xl font-bold text-zinc-900 tracking-tight">Student Roster</h1>
+                <p class="text-zinc-500 font-medium mt-1.5">Enroll a new preschooler into the adaptive learning platform.</p>
+            </header>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 p-8 md:p-10 relative overflow-hidden">
+                
+                <!-- Subtle decorative background gradient -->
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
+
+                <div class="flex items-center gap-3 mb-8 border-b border-zinc-100 pb-4 relative z-10">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM15 17h5a2 2 0 002-2V9a2 2 0 00-2-2h-2M15 17l-3 3-3-3" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-zinc-800">Enroll New Student</h2>
+                </div>
+                
+                <form id="add-student-form" class="space-y-6 relative z-10">
+                    
+                    <!-- Child's Name -->
+                    <div>
+                        <label class="block text-sm font-semibold text-zinc-700 mb-2">Student's First Name</label>
+                        <input type="text" id="first-name" required placeholder="e.g., Leo" 
+                            class="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm placeholder:text-zinc-400">
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div>
+                        <label class="block text-sm font-semibold text-zinc-700 mb-2">Date of Birth</label>
+                        <input type="date" id="dob" required 
+                            class="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm text-zinc-700">
+                        <p class="text-[11px] font-medium text-zinc-500 mt-2 flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" />
+                            </svg>
+                            Used to adjust the baseline difficulty of the BKT algorithm.
+                        </p>
+                    </div>
+
+                    <!-- Avatar Selection (Using Tailwind Peer for styling without custom CSS) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-zinc-700 mb-3">Choose an Avatar</label>
+                        <div class="grid grid-cols-5 gap-3">
+                            <!-- Fox -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="avatar" value="🦊" class="peer sr-only" required>
+                                <div class="text-4xl p-3 flex items-center justify-center border-2 border-zinc-100 bg-zinc-50/50 rounded-2xl transition-all duration-200 peer-hover:border-zinc-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:scale-105 peer-checked:shadow-md">🦊</div>
+                            </label>
+                            <!-- Bear -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="avatar" value="🐻" class="peer sr-only">
+                                <div class="text-4xl p-3 flex items-center justify-center border-2 border-zinc-100 bg-zinc-50/50 rounded-2xl transition-all duration-200 peer-hover:border-zinc-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:scale-105 peer-checked:shadow-md">🐻</div>
+                            </label>
+                            <!-- Rabbit -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="avatar" value="🐰" class="peer sr-only">
+                                <div class="text-4xl p-3 flex items-center justify-center border-2 border-zinc-100 bg-zinc-50/50 rounded-2xl transition-all duration-200 peer-hover:border-zinc-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:scale-105 peer-checked:shadow-md">🐰</div>
+                            </label>
+                            <!-- Tiger -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="avatar" value="🐯" class="peer sr-only">
+                                <div class="text-4xl p-3 flex items-center justify-center border-2 border-zinc-100 bg-zinc-50/50 rounded-2xl transition-all duration-200 peer-hover:border-zinc-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:scale-105 peer-checked:shadow-md">🐯</div>
+                            </label>
+                            <!-- Panda -->
+                            <label class="cursor-pointer relative group">
+                                <input type="radio" name="avatar" value="🐼" class="peer sr-only">
+                                <div class="text-4xl p-3 flex items-center justify-center border-2 border-zinc-100 bg-zinc-50/50 rounded-2xl transition-all duration-200 peer-hover:border-zinc-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:scale-105 peer-checked:shadow-md">🐼</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-6">
+                        <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                            </svg>
+                            Add Student to Database
+                        </button>
+                    </div>
+                    
+                    <!-- Status Message -->
+                    <div id="status-message" class="hidden"></div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Load the Sidebar (which now handles its own active states!) -->
+    <script type="module" src="../sidebar/loader.js"></script>
+
+    <!-- Form Logic -->
+    <script type="module">
+        import { addStudent, logoutUser } from '../api/api.js';
+        import { supabase } from '../api/supabase.js';
+
+        // --- SECURITY GUARD ---
+        // Session Guard
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) window.location.href = '../index.html'; 
+
+        // Sidebar logic: Populate User 
+        setTimeout(() => {
+            const user = session.user;
+            const nameEl = document.getElementById('sidebar-user-name');
+            const emailEl = document.getElementById('sidebar-user-email');
+            const avatarEl = document.getElementById('sidebar-user-avatar');
+
+            if (user && nameEl && emailEl) {
+                const email = user.email;
+                let name = user.user_metadata?.full_name || email.split('@')[0];
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+
+                nameEl.textContent = name;
+                emailEl.textContent = email;
+                
+                if (avatarEl) {
+                    avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&rounded=true`;
+                }
+            }
+        }, 500);
+
+        // --- LOGOUT LOGIC ---
+        document.addEventListener('click', async (e) => {
+            const logoutBtn = e.target.closest('#teacher-logout-btn');
+            if (logoutBtn) {
+                e.preventDefault();
+                try {
+                    logoutBtn.innerText = "Signing out...";
+                    await logoutUser();
+                    window.location.href = '../index.html';
+                } catch(error) {
+                    console.error("Logout failed", error);
+                    alert("Failed to log out. Please try again.");
+                    logoutBtn.innerText = "Sign Out";
+                }
+            }
+        });
+
+        // --- FORM SUBMISSION LOGIC ---
+        const form = document.getElementById('add-student-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const statusMsg = document.getElementById('status-message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            const firstName = document.getElementById('first-name').value;
+            const dob = document.getElementById('dob').value;
+            const selectedAvatar = document.querySelector('input[name="avatar"]:checked').value;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+            `;
+            statusMsg.classList.add('hidden');
+
+            try {
+                // Call the API function
+                const result = await addStudent(firstName, dob, selectedAvatar);
+                const newStudentId = result[0].id;
+                
+                // Beautiful Modern Success Message
+                statusMsg.innerHTML = `
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="bg-emerald-100 p-1.5 rounded-full text-emerald-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-emerald-800 text-base font-bold">Student Successfully Enrolled!</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-emerald-200 mt-3 flex justify-between items-center shadow-sm">
+                        <span class="text-zinc-500 text-xs font-semibold uppercase tracking-wider">Student ID</span>
+                        <span class="text-emerald-700 font-mono font-bold tracking-tight bg-emerald-50 px-2 py-1 rounded">${newStudentId}</span>
+                    </div>
+                    <p class="text-emerald-700/80 text-[11px] font-medium mt-3 text-center">Copy this ID to log in to the Student Portal.</p>
+                `;
+                statusMsg.className = "p-5 rounded-xl bg-emerald-50 border border-emerald-100 block mt-6 animate-[fadeIn_0.3s_ease-out]";
+                
+                form.reset();
+            } catch (error) {
+                statusMsg.textContent = "Error saving student. Please check console or Supabase RLS policies.";
+                statusMsg.className = "text-center p-4 rounded-xl font-medium text-sm bg-rose-50 text-rose-800 border border-rose-100 block mt-6";
+                console.error(error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                    </svg>
+                    Add Student to Database
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

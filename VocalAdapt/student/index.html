@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceAssist | Student Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating { animation: float 3s ease-in-out infinite; }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 25px rgba(56, 189, 248, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+        }
+        .listening-animation { animation: pulse-ring 1.5s infinite; }
+        
+        .cloud-bg {
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M 20 50 Q 20 30 40 30 Q 50 10 70 30 Q 90 30 90 50 Z" fill="white" opacity="0.4"/></svg>');
+            background-size: 200px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-sky-300 to-sky-100 flex font-sans min-h-screen cloud-bg selection:bg-yellow-200">
+
+    <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
+        <button id="logout-btn" class="absolute top-6 right-6 bg-white/50 hover:bg-white/80 backdrop-blur-sm text-sky-800 font-bold py-2 px-4 rounded-xl shadow-sm transition-all border border-sky-200 text-sm flex items-center">
+            <span>🚪 Leave</span>
+        </button>
+
+        <div class="max-w-md w-full bg-white/90 backdrop-blur-md rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)] overflow-hidden text-center border-8 border-white m-4 relative z-10">
+            
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-400 p-8 text-white relative flex justify-between items-center">
+                <div class="text-left">
+                    <h1 class="text-3xl font-extrabold mb-1 drop-shadow-md tracking-tight" id="greeting-text">Hello!</h1>
+                    <p class="text-yellow-50 font-medium text-sm">Listen carefully, then speak!</p>
+                </div>
+                <!-- Thesis Feature: Displaying the Adaptive Level -->
+                <div class="bg-white/20 px-3 py-2 rounded-xl border border-white/40 shadow-inner text-right">
+                    <span class="block text-[10px] uppercase tracking-wider font-bold text-yellow-100 mb-0.5">Difficulty</span>
+                    <span class="block text-2xl font-black" id="difficulty-badge">Lvl 1</span>
+                </div>
+            </div>
+            
+            <div class="p-8 md:p-10 flex flex-col items-center">
+                <div class="relative mb-8 floating">
+                    <div id="avatar-display" class="relative w-32 h-32 mx-auto bg-white rounded-full flex items-center justify-center text-6xl shadow-xl border-4 border-yellow-100 z-10">
+                        ⏳
+                    </div>
+                </div>
+                
+                <div class="bg-sky-50 rounded-2xl p-6 w-full mb-8 border-2 border-sky-100 shadow-inner min-h-[100px] flex flex-col items-center justify-center">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-sky-900 leading-tight mb-2" id="prompt-text">Waking up...</h2>
+                    <!-- Added a helper text to show what the system is listening for -->
+                    <p class="text-sm font-bold text-sky-600 bg-sky-100 px-3 py-1 rounded-full hidden" id="target-hint">Target: <span id="target-word"></span></p>
+                </div>
+                
+                <button id="mic-btn" class="bg-green-500 hover:bg-green-600 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(34,197,94,0.5)] transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed border-4 border-white group select-none">
+                    <svg id="mic-icon" xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                </button>
+                <p class="mt-5 text-gray-400 font-bold uppercase tracking-widest text-sm h-8" id="mic-hint">TAP TO SPEAK</p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { logInteraction, getNextQuestion, loginStudent } from '../api/api.js';
+
+        let currentQuestionId = null;
+        let expectedAnswer = "";
+        let verifiedChildId = null;
+        let isEvaluating = false;
+
+        async function initializePortal() {
+            const storedId = localStorage.getItem('student_id'); 
+            if (!storedId) { window.location.href = '../index.html'; return; }
+
+            try {
+                const studentData = await loginStudent(storedId);
+                verifiedChildId = studentData.id;
+                document.getElementById('greeting-text').innerText = `Ready, ${studentData.first_name}?`;
+                document.getElementById('avatar-display').innerText = studentData.avatar_url || '🧒';
+                await loadQuestion();
+            } catch (error) {
+                alert("Session Expired. Please log in again.");
+                localStorage.removeItem('student_id');
+                window.location.href = '../index.html';
+            }
+        }
+
+        async function loadQuestion() {
+            const promptEl = document.getElementById('prompt-text');
+            const micBtn = document.getElementById('mic-btn');
+            const diffBadge = document.getElementById('difficulty-badge');
+            const targetHint = document.getElementById('target-hint');
+            
+            promptEl.innerText = "Thinking...";
+            targetHint.classList.add('hidden');
+            micBtn.disabled = true; 
+            
+            const question = await getNextQuestion(verifiedChildId);
+            
+            if (question) {
+                promptEl.innerText = question.prompt_text;
+                diffBadge.innerText = `Lvl ${question.difficulty_level}`;
+                currentQuestionId = question.id;
+                expectedAnswer = question.expected_answer; 
+                
+                // Show hint for testing purposes
+                document.getElementById('target-word').innerText = expectedAnswer;
+                targetHint.classList.remove('hidden');
+                
+                micBtn.disabled = false; 
+            } else {
+                promptEl.innerText = "No questions found!";
+            }
+        }
+
+        // --- ALGORITHM 1: Levenshtein Distance ---
+        function calculateSimilarity(s1, s2) {
+            let longer = s1, shorter = s2;
+            if (s1.length < s2.length) { longer = s2; shorter = s1; }
+            const longerLength = longer.length;
+            if (longerLength === 0) return 1.0;
+            
+            const costs = new Array();
+            for (let i = 0; i <= longer.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= shorter.length; j++) {
+                    if (i == 0) costs[j] = j;
+                    else {
+                        if (j > 0) {
+                            let newValue = costs[j - 1];
+                            if (longer.charAt(i - 1) != shorter.charAt(j - 1))
+                                newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                            costs[j - 1] = lastValue;
+                            lastValue = newValue;
+                        }
+                    }
+                }
+                if (i > 0) costs[shorter.length] = lastValue;
+            }
+            return (longerLength - costs[shorter.length]) / parseFloat(longerLength);
+        }
+
+        const micBtn = document.getElementById('mic-btn');
+        const micHint = document.getElementById('mic-hint');
+        const micIcon = document.getElementById('mic-icon');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; 
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                micBtn.className = "bg-sky-400 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg listening-animation border-4 border-white";
+                micIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10v7a2 2 0 002 2h10a2 2 0 002-2v-7m-9 4h2m-1-4v4" />'; 
+                micHint.innerText = "LISTENING... (SPEAK NOW)";
+                micHint.className = "mt-5 text-sky-500 font-bold uppercase tracking-widest text-sm h-8";
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = event.results[0][0].transcript;
+                evaluateAnswer(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                if(event.error === 'no-speech') {
+                    evaluateAnswer(""); // Send blank to evaluation to handle it gracefully
+                } else {
+                    console.error("Speech error:", event.error);
+                    micHint.innerText = `MIC ERROR: ${event.error}`;
+                    setTimeout(resetMicUI, 2000);
+                }
+            };
+
+            recognition.onend = () => {
+                if(!isEvaluating) resetMicUI(); 
+            };
+
+        } else {
+            alert("Speech Recognition is not supported. Please use Chrome/Safari.");
+        }
+
+        micBtn.addEventListener('click', () => {
+            if (isEvaluating || !recognition || !currentQuestionId) return;
+            try {
+                recognition.start();
+            } catch(e) {}
+        });
+
+        // --- ALGORITHM 2: Enhanced Fuzzy Evaluation for Early Childhood ---
+        function evaluateAnswer(rawTranscript) {
+            isEvaluating = true;
+            
+            // Clean the transcript: remove punctuation, lowercase it
+            let childSpoke = rawTranscript.replace(/[.,!?]/g, '').toLowerCase().trim();
+            
+            if (childSpoke === "") {
+                micBtn.className = "bg-gray-400 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg border-4 border-white transition-all";
+                micIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />';
+                micHint.innerText = "I DIDN'T HEAR ANYTHING";
+                micHint.className = "mt-5 text-gray-500 font-bold uppercase tracking-widest text-sm h-8";
+                
+                logInteractionAndNext(false, "No speech detected");
+                return;
+            }
+
+            const possibleAnswers = expectedAnswer.split(',').map(s => s.trim().toLowerCase());
+            let isCorrect = false;
+            let bestScore = 0;
+
+            for (let ans of possibleAnswers) {
+                // 1. Exact Match Check
+                if (childSpoke === ans) {
+                    bestScore = 1.0;
+                    break;
+                }
+
+                // 2. Standard Levenshtein Check
+                let score = calculateSimilarity(childSpoke, ans);
+
+                // 3. THESIS FEATURE: Phonetic Over-Correction Bypass
+                // If the target is a short sound (like "moo") and the AI autocorrects to a longer word (like "more")
+                if (ans.length <= 4) {
+                    // If the heard word STARTS with the target word (e.g. "moo" -> "moon")
+                    if (childSpoke.startsWith(ans)) {
+                        score = Math.max(score, 0.95);
+                    }
+                    // If the heard word starts with the first 2 letters (e.g. "moo" -> "more")
+                    else if (ans.length >= 2 && childSpoke.startsWith(ans.substring(0, 2))) {
+                        score = Math.max(score, 0.85); 
+                    }
+                }
+
+                if (score > bestScore) bestScore = score;
+            }
+
+            // Lowered threshold to 70% to accommodate the over-correction bypass
+            if (bestScore >= 0.70) {
+                isCorrect = true;
+                micBtn.className = "bg-green-400 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg border-4 border-white transform scale-110 transition-all";
+                micIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />';
+                micHint.innerText = "GREAT JOB!";
+                micHint.className = "mt-5 text-green-500 font-bold uppercase tracking-widest text-sm h-8";
+            } else {
+                micBtn.className = "bg-orange-400 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg border-4 border-white transition-all";
+                micIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />';
+                micHint.innerText = `HEARD: "${childSpoke}"`;
+                micHint.className = "mt-5 text-orange-500 font-bold uppercase tracking-widest text-sm h-8";
+            }
+
+            logInteractionAndNext(isCorrect, childSpoke);
+        }
+
+        // Helper function to log and load next
+        function logInteractionAndNext(isCorrect, transcript) {
+            logInteraction(verifiedChildId, currentQuestionId, isCorrect, transcript).then(() => {
+                setTimeout(() => {
+                    resetMicUI();
+                    loadQuestion(); // Fetch next question (Will adapt!)
+                }, 2500);
+            }).catch(() => {
+                alert("Failed to save progress.");
+                resetMicUI();
+            });
+        }
+
+        function resetMicUI() {
+            micBtn.className = "bg-green-500 hover:bg-green-600 text-white rounded-full w-28 h-28 flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(34,197,94,0.5)] transition-all transform hover:scale-105 active:scale-95 border-4 border-white group select-none";
+            micHint.innerText = "TAP TO SPEAK";
+            micHint.className = "mt-5 text-gray-400 font-bold uppercase tracking-widest text-sm h-8";
+            micIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />`;
+            isEvaluating = false;
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('student_id');
+            window.location.href = '../index.html';
+        });
+
+        initializePortal();
+    </script>
+</body>
+</html>

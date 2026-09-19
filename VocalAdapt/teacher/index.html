@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BKT Analytics | Teacher Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" 
+        onload="renderMathInElement(document.body, { 
+            delimiters: [ 
+                {left: '$$', right: '$$', display: true}, 
+                {left: '$', right: '$', display: false} 
+            ] 
+        });"></script>
+
+    <!-- Configure Tailwind for a professional color palette -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Import Inter Font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        /* Custom scrollbar for sleeker look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 flex font-sans min-h-screen text-slate-800 antialiased">
+
+    <!-- The Sidebar will be injected here -->
+    <div id="sidebar-container"></div>
+
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+        <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Bayesian Knowledge Tracing (BKT)</h1>
+                <p class="text-slate-500 font-medium mt-1.5 text-sm md:text-base">Real-time mastery probabilities $P(L_t)$ and adaptive learning metrics.</p>
+            </div>
+            <div class="flex space-x-3 w-full md:w-auto">
+                 <button onclick="exportToCSV()" class="flex-1 md:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export Data
+                </button>
+                <button onclick="window.location.reload()" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Sync Live
+                </button>
+            </div>
+        </header>
+
+        <!-- TOP STATS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-blue-50 rounded-xl text-blue-600 flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-slate-900" id="stat-total">0</p>
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Total Evaluated</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600 flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-slate-900" id="stat-rate">0%</p>
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Class Success Rate</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-rose-50 rounded-xl text-rose-600 flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-slate-900" id="stat-at-risk">0</p>
+                    <!-- UPDATED: Changed from At-Risk to Needs Support -->
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Needs Support ($P(L_t) < 0.4$)</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between group hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-3 bg-purple-50 rounded-xl text-purple-600 flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-slate-900" id="stat-time">0s</p>
+                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Avg Response Time</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTERVENTION ALERTS PANEL -->
+        <div class="bg-rose-50 border border-rose-200/60 rounded-2xl p-6 mb-8 hidden shadow-sm" id="intervention-panel">
+            <div class="flex items-start md:items-center mb-5 gap-3">
+                <div class="bg-white p-2 rounded-full shadow-sm text-rose-500 flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <!-- UPDATED: Changed from Intervention Required to Support Required -->
+                    <h3 class="text-lg font-bold text-rose-900">Support Required</h3>
+                    <p class="text-sm text-rose-700/80 font-medium">BKT model estimates mastery probability ($P(L_t)$) under 40% for these skills.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="intervention-list">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Chart Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-900">Question Performance</h3>
+                    <p class="text-sm text-slate-500">Success distribution across top 5 tested prompts.</p>
+                </div>
+                <div class="relative flex-1 w-full min-h-[300px]">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Detail Table (Problematic Questions) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-[420px]">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Prompt Analysis</h3>
+                        <p class="text-sm text-slate-500">Search and review specific struggle areas.</p>
+                    </div>
+                    <div class="relative w-full sm:w-56">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" id="search-question" placeholder="Search prompts..." class="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow">
+                    </div>
+                </div>
+                <div class="overflow-y-auto flex-1 pr-2 -mr-2">
+                    <div id="analytics-list" class="space-y-4">
+                        <div class="p-8 text-center text-slate-400 text-sm">Loading analytics...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- THESIS FEATURE: BKT MASTERY MATRIX -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-0 overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white z-10">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Student Mastery Matrix</h3>
+                    <p class="text-sm text-slate-500 mt-1">Calculated via <code>child_skill_states.p_mastery</code></p>
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                    <div class="relative flex-1 sm:w-56">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" id="search-student" placeholder="Search student..." class="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                    </div>
+                    <select id="filter-student-state" class="border border-slate-200 rounded-xl px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-700 cursor-pointer w-full sm:w-48">
+                        <option value="all">All States</option>
+                        <option value="mastered">Mastered (>= 0.8)</option>
+                        <option value="learning">Learning (0.4 - 0.79)</option>
+                        <!-- UPDATED: Changed from At-Risk to Needs Practice -->
+                        <option value="risk">Needs Practice (< 0.4)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 text-slate-500 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold">
+                            <th class="py-4 px-6">Student Name</th>
+                            <th class="py-4 px-6 text-center">Interactions</th>
+                            <th class="py-4 px-6">Lowest Skill Area</th>
+                            <th class="py-4 px-6 text-right">Aggregate $P(L_t)$</th>
+                            <th class="py-4 px-6 text-center">BKT Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-table-body" class="divide-y divide-slate-100 bg-white">
+                        <tr><td colspan="5" class="py-12 text-center text-slate-400 text-sm">Loading BKT data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../sidebar/loader.js"></script>
+    
+    <script type="module">
+        import { getQuestionAnalytics, getStudentMasteryData, logoutUser } from '../api/api.js';
+        import { supabase } from '../api/supabase.js';
+
+        // Helper function to force KaTeX rendering on dynamically added DOM elements
+        function renderMath() {
+            if(window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+        }
+
+        // Session Guard
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) window.location.href = '../index.html'; 
+
+        // Sidebar logic: Populate User & Handle Logout
+        setTimeout(() => {
+            // 1. Populate User Info dynamically
+            const user = session.user;
+            const nameEl = document.getElementById('sidebar-user-name');
+            const emailEl = document.getElementById('sidebar-user-email');
+            const avatarEl = document.getElementById('sidebar-user-avatar');
+
+            if (user && nameEl && emailEl) {
+                const email = user.email;
+                let name = user.user_metadata?.full_name || email.split('@')[0];
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+
+                nameEl.textContent = name;
+                emailEl.textContent = email;
+                
+                if (avatarEl) {
+                    // Uses a nice soft blue background for the initials to match the UI
+                    avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&rounded=true`;
+                }
+            }
+
+            // 2. Handle Logout Button
+            const logoutBtn = document.getElementById('teacher-logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    logoutBtn.innerText = "Signing out...";
+                    await logoutUser();
+                    window.location.href = '../index.html';
+                });
+            }
+        }, 500);
+
+        window.exportToCSV = function() {
+            if (!window.bktExportData) {
+                alert("Data loading..."); return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Student Name,Total Interactions,Lowest Skill,Lowest Skill p_mastery,Average p_mastery\n";
+            window.bktExportData.forEach(function(row) {
+                csvContent += `${row.name},${row.interactions},${row.lowest_skill},${row.lowest_skill_p.toFixed(2)},${row.avg_mastery.toFixed(2)}\n`;
+            });
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "bkt_mastery_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        let chartInstance = null;
+        let globalQuestionsData = [];
+        let globalStudentsData = [];
+
+        async function loadDashboard() {
+            try {
+                // Fetch dual data streams
+                const qData = await getQuestionAnalytics();
+                const studentData = await getStudentMasteryData();
+                window.bktExportData = studentData;
+                globalQuestionsData = qData.questions;
+                globalStudentsData = studentData;
+                
+                if (qData.overview.totalAttempts === 0 && studentData.length === 0) {
+                    document.getElementById('analytics-list').innerHTML = `<div class="p-8 text-slate-400 text-center text-sm">No data in database.</div>`;
+                    document.getElementById('student-table-body').innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-sm">No BKT data calculated yet.</td></tr>`;
+                    return;
+                }
+
+                // 1. UPDATE OVERVIEW
+                document.getElementById('stat-total').innerText = qData.overview.totalAttempts;
+                document.getElementById('stat-rate').innerText = `${Math.round(qData.overview.globalSuccessRate * 100)}%`;
+                
+                let totalTime = 0;
+                let qCount = 0;
+                globalQuestionsData.forEach(q => {
+                    if(q.avg_rt_ms) { totalTime += q.avg_rt_ms; qCount++; }
+                });
+                if(qCount > 0) document.getElementById('stat-time').innerText = (totalTime / qCount / 1000).toFixed(1) + "s";
+
+                // 2. DRAW CHART (Top 5)
+                renderChart(globalQuestionsData);
+
+                // 3. RENDER LISTS
+                renderQuestionList(globalQuestionsData);
+                renderStudentTable(globalStudentsData);
+                
+                // 4. SETUP EVENT LISTENERS FOR FILTERS
+                setupFilters();
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('analytics-list').innerHTML = `<div class="p-4 text-rose-500 text-sm font-medium">Load Error. Check console.</div>`;
+            }
+        }
+
+        function renderQuestionList(questions) {
+            const listContainer = document.getElementById('analytics-list');
+            listContainer.innerHTML = ''; 
+
+            if(questions.length === 0) {
+                listContainer.innerHTML = `<div class="p-8 text-slate-400 text-center text-sm">No questions match your search.</div>`;
+                return;
+            }
+
+            questions.forEach((q) => {
+                const rate = Math.round(q.success_rate * 100);
+                // Professional color mapping
+                const barColor = rate < 50 ? 'bg-rose-500' : (rate < 80 ? 'bg-amber-400' : 'bg-emerald-500');
+                const timeSecs = q.avg_rt_ms ? (q.avg_rt_ms / 1000).toFixed(1) + "s" : "N/A";
+                
+                listContainer.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:border-slate-300 transition-colors group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-slate-900 text-sm truncate" title="${q.prompt}">${q.prompt}</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[11px] text-slate-500 font-medium">Skill: <span class="text-indigo-600">${q.skill}</span></span>
+                                    <span class="text-[10px] text-slate-300">•</span>
+                                    <span class="text-[11px] text-slate-400 font-mono">RT: ${timeSecs}</span>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="text-xs font-bold ${rate < 50 ? 'text-rose-700 bg-rose-50' : (rate < 80 ? 'text-amber-700 bg-amber-50' : 'text-emerald-700 bg-emerald-50')} px-2.5 py-1 rounded-full border ${rate < 50 ? 'border-rose-100' : (rate < 80 ? 'border-amber-100' : 'border-emerald-100')}">
+                                    ${rate}% Pass
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center gap-3">
+                            <div class="flex gap-2 shrink-0">
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    ${q.correct}
+                                </span>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    ${q.incorrect}
+                                </span>
+                            </div>
+                            
+                            <!-- Thinner, sleeker progress bar -->
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500 ease-out" style="width: ${rate}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderStudentTable(students) {
+            const tbody = document.getElementById('student-table-body');
+            const interventionPanel = document.getElementById('intervention-panel');
+            const interventionList = document.getElementById('intervention-list');
+            
+            tbody.innerHTML = '';
+            // Only rebuild the at-risk panel if we are showing all students
+            const isFullList = students.length === globalStudentsData.length;
+            if(isFullList) interventionList.innerHTML = ''; 
+            
+            let supportRequiredCount = 0;
+
+            if(students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400 text-sm">No students match current filters.</td></tr>`;
+            }
+
+            students.forEach(student => {
+                const pLevel = student.avg_mastery;
+                const pDisplay = pLevel.toFixed(2);
+                
+                if (isFullList && pLevel < 0.40 && student.interactions >= 1) { 
+                    supportRequiredCount++;
+                    interventionList.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col justify-center">
+                            <span class="font-bold text-slate-900 text-sm mb-1 truncate">${student.name}</span>
+                            <span class="text-xs text-slate-500 mb-3 truncate">Needs review on: <span class="font-medium text-slate-700">${student.lowest_skill}</span></span>
+                            <span class="text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-100 px-2.5 py-1 rounded-md self-start">
+                                $P(L_t) = ${student.lowest_skill_p.toFixed(2)}$
+                            </span>
+                        </div>
+                    `;
+                }
+
+                // Modern Badges - UPDATED "At-Risk" to "Needs Practice"
+                let stateConfig = pLevel >= 0.80 
+                    ? { icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z', text: 'Mastered', classes: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
+                    : pLevel >= 0.40 
+                    ? { icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', text: 'Learning', classes: 'text-amber-700 bg-amber-50 border-amber-200' }
+                    : { icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', text: 'Needs Practice', classes: 'text-rose-700 bg-rose-50 border-rose-200' };
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="py-4 px-6 font-semibold text-slate-900">${student.name}</td>
+                        <td class="py-4 px-6 text-center text-slate-500 font-medium">${student.interactions}</td>
+                        <td class="py-4 px-6 text-sm text-slate-600">
+                            ${student.lowest_skill} 
+                            <span class="text-xs text-slate-400 font-mono ml-1">(${student.lowest_skill_p.toFixed(2)})</span>
+                        </td>
+                        <td class="py-4 px-6 text-right font-mono font-bold ${pLevel < 0.4 ? 'text-rose-600' : 'text-slate-700'}">${pDisplay}</td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border font-bold text-[11px] uppercase tracking-wider ${stateConfig.classes}">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${stateConfig.icon}"/></svg>
+                                ${stateConfig.text}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            if(isFullList) {
+                document.getElementById('stat-at-risk').innerText = supportRequiredCount;
+                if (supportRequiredCount > 0) interventionPanel.classList.remove('hidden');
+                else interventionPanel.classList.add('hidden');
+            }
+            
+            // Re-render math explicitly after DOM injection
+            renderMath();
+        }
+
+        function setupFilters() {
+            const searchQ = document.getElementById('search-question');
+            const searchS = document.getElementById('search-student');
+            const filterS = document.getElementById('filter-student-state');
+
+            // Question Search Event
+            searchQ.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = globalQuestionsData.filter(q => 
+                    q.prompt.toLowerCase().includes(term) || q.skill.toLowerCase().includes(term)
+                );
+                renderQuestionList(filtered);
+            });
+
+            // Student Search & Filter Events
+            const applyStudentFilters = () => {
+                const term = searchS.value.toLowerCase();
+                const state = filterS.value;
+                
+                const filtered = globalStudentsData.filter(s => {
+                    const matchName = s.name.toLowerCase().includes(term);
+                    let matchState = true;
+                    if(state === 'mastered') matchState = s.avg_mastery >= 0.8;
+                    else if(state === 'learning') matchState = s.avg_mastery >= 0.4 && s.avg_mastery < 0.8;
+                    else if(state === 'risk') matchState = s.avg_mastery < 0.4;
+                    
+                    return matchName && matchState;
+                });
+                renderStudentTable(filtered);
+            };
+
+            searchS.addEventListener('input', applyStudentFilters);
+            filterS.addEventListener('change', applyStudentFilters);
+        }
+
+        function renderChart(questions) {
+            const chartLabels = [];
+            const chartCorrectData = [];
+            const chartIncorrectData = [];
+            
+            questions.slice(0, 5).forEach(q => {
+                chartLabels.push(q.prompt.length > 15 ? q.prompt.substring(0, 15) + '...' : q.prompt);
+                chartCorrectData.push(q.correct);
+                chartIncorrectData.push(q.incorrect);
+            });
+
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            
+            // Set Chart.js global font to match UI
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = "#64748b"; // slate-500
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        { 
+                            label: 'Correct', 
+                            data: chartCorrectData, 
+                            backgroundColor: '#10b981', // emerald-500
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        },
+                        { 
+                            label: 'Incorrect', 
+                            data: chartIncorrectData, 
+                            backgroundColor: '#f43f5e', // rose-500
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: { boxWidth: 12, usePointStyle: true, padding: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b', // slate-800
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 }
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            stacked: true,
+                            border: { display: false },
+                            grid: { color: '#f1f5f9' }, // slate-100
+                            beginAtZero: true
+                        }, 
+                        x: { 
+                            stacked: true,
+                            border: { display: false },
+                            grid: { display: false }
+                        } 
+                    } 
+                }
+            });
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

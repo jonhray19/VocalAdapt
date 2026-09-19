@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceAssist | Adaptive Learning Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Modern Glassmorphism & Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.2) 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-100 flex items-center justify-center min-h-screen font-sans antialiased selection:bg-indigo-200">
+
+    <div class="max-w-5xl w-full bg-white/90 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col md:flex-row m-6 border border-white">
+        
+        <!-- Left Side: Welcome Banner (Branding) -->
+        <div class="md:w-1/2 bg-gradient-to-br from-indigo-600 to-purple-700 p-12 text-white flex flex-col justify-center items-center text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full bg-pattern opacity-30"></div>
+            <div class="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl"></div>
+            
+            <div class="relative z-10">
+                <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center text-5xl mb-8 mx-auto shadow-inner border border-white/30">
+                    🤖
+                </div>
+                <h1 class="text-4xl font-extrabold mb-4 tracking-tight">VoiceAssist <span class="text-indigo-200">BKT</span></h1>
+                <p class="text-indigo-100 text-lg leading-relaxed font-medium">The voice-interactive adaptive learning platform for early childhood education.</p>
+            </div>
+        </div>
+
+        <!-- Right Side: Login Selection & Forms -->
+        <div class="md:w-1/2 p-12 relative flex flex-col justify-center bg-white">
+            
+            <!-- Selection View -->
+            <div id="selection-view" class="flex flex-col h-full justify-center fade-in">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-2 text-center tracking-tight">Welcome Back</h2>
+                <p class="text-gray-500 text-center mb-10 font-medium">Please select your portal to continue.</p>
+                
+                <div class="space-y-4">
+                    <button onclick="showView('teacher-login')" class="group w-full bg-white border-2 border-gray-100 hover:border-indigo-500 hover:shadow-md text-gray-700 hover:text-indigo-700 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mr-4 group-hover:bg-indigo-100 transition-colors">👨‍🏫</div>
+                            <div class="text-left">
+                                <span class="block text-lg">Teacher / Admin</span>
+                                <span class="block text-xs text-gray-400 font-normal">Dashboard & Analytics</span>
+                            </div>
+                        </div>
+                        <span class="text-gray-300 group-hover:text-indigo-500 transition-colors">→</span>
+                    </button>
+                    
+                    <button onclick="showView('student-login')" class="group w-full bg-white border-2 border-gray-100 hover:border-yellow-400 hover:shadow-md text-gray-700 hover:text-yellow-700 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center text-2xl mr-4 group-hover:bg-yellow-100 transition-colors">🎒</div>
+                            <div class="text-left">
+                                <span class="block text-lg">Student</span>
+                                <span class="block text-xs text-gray-400 font-normal">Interactive Learning</span>
+                            </div>
+                        </div>
+                        <span class="text-gray-300 group-hover:text-yellow-500 transition-colors">→</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Teacher Login Form -->
+            <div id="teacher-login" class="hidden flex flex-col h-full justify-center fade-in">
+                <button onclick="showView('selection-view')" class="text-sm text-gray-400 hover:text-indigo-600 mb-8 flex items-center font-medium transition-colors w-fit">
+                    <span class="mr-2">←</span> Back to selection
+                </button>
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">Admin Login</h2>
+                <p class="text-gray-500 mb-8 font-medium">Access your classroom analytics.</p>
+                
+                <form id="teacher-form" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="t-email" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all outline-none" placeholder="teacher@school.edu">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                        <input type="password" id="t-pass" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="t-submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-200 mt-6 transition-all active:scale-[0.98]">
+                        Sign In to Dashboard
+                    </button>
+                    <p id="t-error" class="text-red-500 text-sm mt-3 hidden font-medium bg-red-50 p-3 rounded-lg border border-red-100"></p>
+                </form>
+                <p class="text-sm text-gray-400 mt-8 text-center font-medium">Contact your system administrator for access.</p>
+            </div>
+
+            <!-- Student Login Form -->
+            <div id="student-login" class="hidden flex flex-col h-full justify-center fade-in">
+                <button onclick="showView('selection-view')" class="text-sm text-gray-400 hover:text-yellow-600 mb-8 flex items-center font-medium transition-colors w-fit">
+                    <span class="mr-2">←</span> Back to selection
+                </button>
+                <div class="text-center mb-8">
+                    <div class="inline-block p-4 bg-yellow-100 rounded-full text-4xl mb-4">🎫</div>
+                    <h2 class="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">Student Login</h2>
+                    <p class="text-gray-500 font-medium">Ask your teacher for your Secret ID!</p>
+                </div>
+                
+                <form id="student-form" class="space-y-4">
+                    <div>
+                        <input type="text" id="s-id" placeholder="Paste ID (e.g., a1b2c3d4...)" required class="w-full px-4 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-yellow-200 focus:border-yellow-400 focus:bg-white transition-all outline-none text-center font-mono text-gray-700 text-lg tracking-wider">
+                    </div>
+                    <button type="submit" id="s-submit" class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-extrabold py-4 px-4 rounded-xl shadow-lg shadow-yellow-200 mt-4 text-lg transition-all active:scale-[0.98]">
+                        Let's Play! 🚀
+                    </button>
+                    <p id="s-error" class="text-red-500 text-sm mt-3 hidden font-medium bg-red-50 p-3 rounded-lg border border-red-100 text-center"></p>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- STANDARD SCRIPT (Fixes the showView ReferenceError) -->
+    <script>
+        function showView(viewId) {
+            document.getElementById('selection-view').classList.add('hidden');
+            document.getElementById('teacher-login').classList.add('hidden');
+            document.getElementById('student-login').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+    </script>
+
+    <!-- MODULE SCRIPT (Handles the Database Logic) -->
+    <script type="module">
+        import { signInTeacher, loginStudent } from './api/api.js';
+        import { supabase } from './api/supabase.js';
+
+        // --- SESSION GUARD ---
+        // If a teacher is already logged in, skip this page!
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.location.href = 'teacher/student-list.html';
+        }
+
+        // --- Teacher Auth ---
+        document.getElementById('teacher-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('t-submit');
+            const err = document.getElementById('t-error');
+            
+            btn.disabled = true; 
+            btn.innerHTML = '<span class="inline-block animate-pulse">Logging in...</span>'; 
+            err.classList.add('hidden');
+
+            try {
+                await signInTeacher(document.getElementById('t-email').value, document.getElementById('t-pass').value);
+                window.location.href = 'teacher/student-list.html';
+            } catch (error) {
+                err.textContent = error.message;
+                err.classList.remove('hidden');
+                btn.disabled = false; 
+                btn.innerText = 'Sign In to Dashboard';
+            }
+            
+        });
+
+        // --- Student Auth ---
+        document.getElementById('student-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('s-submit');
+            const err = document.getElementById('s-error');
+            const studentId = document.getElementById('s-id').value.trim();
+            
+            btn.disabled = true; 
+            btn.innerHTML = '<span class="inline-block animate-pulse">Checking ID...</span>'; 
+            err.classList.add('hidden');
+
+            try {
+                const student = await loginStudent(studentId);
+                localStorage.setItem('student_id', student.id);
+                localStorage.setItem('student_name', student.first_name);
+                
+                window.location.href = 'student/index.html';
+            } catch (error) {
+                err.textContent = "Oops! We couldn't find that Student ID. Please check with your teacher.";
+                err.classList.remove('hidden');
+                btn.disabled = false; 
+                btn.innerText = "Let's Play! 🚀";
+            }
+        });
+    </script>
+</body>
+</html>

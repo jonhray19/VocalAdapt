@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student List | Teacher Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smoother scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+    </style>
+</head>
+<body class="bg-zinc-50 flex font-sans min-h-screen text-zinc-900 antialiased">
+
+    <!-- The Sidebar will be injected here -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto flex flex-col items-center justify-start">
+        
+        <!-- Inner Wrapper to control max-width (wider for grids) and center horizontally -->
+        <div class="w-full max-w-5xl mt-4 md:mt-6">
+            
+            <header class="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 pb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-zinc-900 tracking-tight">Student Roster</h1>
+                    <p class="text-zinc-500 font-medium mt-1.5">View and manage all enrolled preschoolers.</p>
+                </div>
+                <a href="add-student.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Add New Student
+                </a>
+            </header>
+
+            <!-- Grid Container for Students -->
+            <div id="students-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loading State -->
+                <div class="col-span-full flex flex-col items-center justify-center py-20 text-zinc-400" id="loading-state">
+                    <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="font-medium">Loading roster from database...</p>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Load the Sidebar -->
+    <script src="../sidebar/loader.js"></script>
+
+    <!-- Page Logic -->
+    <script type="module">
+        import { getStudents, logoutUser } from '../api/api.js';
+        import { supabase } from '../api/supabase.js';
+
+        // Session Guard
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) window.location.href = '../index.html'; 
+
+        // Sidebar logic
+        setTimeout(() => {
+            const user = session.user;
+            const nameEl = document.getElementById('sidebar-user-name');
+            const emailEl = document.getElementById('sidebar-user-email');
+            const avatarEl = document.getElementById('sidebar-user-avatar');
+
+            if (user && nameEl && emailEl) {
+                const email = user.email;
+                let name = user.user_metadata?.full_name || email.split('@')[0];
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+
+                nameEl.textContent = name;
+                emailEl.textContent = email;
+                
+                if (avatarEl) {
+                    avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff&rounded=true`;
+                }
+            }
+        }, 500);
+
+        // Logout Event Delegation
+        document.addEventListener('click', async (e) => {
+            const logoutBtn = e.target.closest('#teacher-logout-btn');
+            
+            if (logoutBtn) {
+                e.preventDefault();
+                try {
+                    logoutBtn.innerText = "Signing out...";
+                    await logoutUser();
+                    
+                    localStorage.removeItem('student_id');
+                    localStorage.removeItem('student_name');
+                    
+                    window.location.href = '../index.html';
+                } catch(error) {
+                    console.error("Logout failed", error);
+                    alert("Failed to log out. Please try again.");
+                    logoutBtn.innerText = "Sign Out";
+                }
+            }
+        });
+
+        async function loadStudents() {
+            const grid = document.getElementById('students-grid');
+            const students = await getStudents();
+
+            if (!students || students.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white p-12 rounded-2xl shadow-sm text-center border border-zinc-200">
+                        <div class="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 border border-zinc-100 shadow-sm">
+                            🚸
+                        </div>
+                        <h3 class="text-xl font-bold text-zinc-900 mb-2">No students enrolled yet</h3>
+                        <p class="text-zinc-500 mb-6 font-medium">Start building your roster by adding preschoolers.</p>
+                        <a href="add-student.html" class="inline-flex bg-blue-50 text-blue-700 font-bold py-2.5 px-6 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100">
+                            Enroll First Student
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = ''; // Clear loading state
+
+            students.forEach(student => {
+                const dob = new Date(student.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-zinc-200 p-6 flex flex-col items-center hover:shadow-md transition-shadow relative overflow-hidden group";
+                
+                // Modern Zinc & Blue Card Design
+                card.innerHTML = `
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
+                    
+                    <div class="text-5xl p-4 bg-zinc-50 rounded-2xl border-2 border-white shadow-sm mb-4 transition-transform duration-300 group-hover:scale-105">
+                        ${student.avatar_url || '👤'}
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-zinc-800">${student.first_name}</h3>
+                    <p class="text-[13px] font-medium text-zinc-500 mb-5">DOB: ${dob}</p>
+                    
+                    <div class="w-full bg-zinc-50/80 rounded-xl p-3 mt-auto border border-zinc-100">
+                        <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Student ID</p>
+                        <div class="flex items-center justify-between bg-white border border-zinc-200 rounded-lg px-3 py-2 shadow-sm">
+                            <code class="text-xs text-blue-600 font-mono font-bold truncate pr-2">${student.id}</code>
+                            <button onclick="document.execCommand('copy')" onmousedown="navigator.clipboard.writeText('${student.id}').then(() => alert('ID Copied!'))" class="text-zinc-400 hover:text-blue-500 transition-colors bg-zinc-50 hover:bg-blue-50 p-1.5 rounded-md border border-transparent hover:border-blue-100" title="Copy ID">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        loadStudents();
+    </script>
+</body>
+</html>
